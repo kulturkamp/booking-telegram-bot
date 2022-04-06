@@ -1,5 +1,20 @@
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters,  CallbackQueryHandler, ConversationHandler
-from registration_handler import INIT_CHOISE, NAME, PHONE, QUANTITY, SURNAME, WINDOW, booking_callback__handler, name, phone, quant, registration1, registration2, start_command, booking_callback__handler, surname
+from telegram.ext import(
+    Updater, 
+    CommandHandler, 
+    MessageHandler, 
+    Filters,  
+    CallbackQueryHandler, 
+    ConversationHandler
+    )
+from registration_handler import (
+    start_command,
+    INIT_CHOISE, registration1, registration2,
+    NAME, name,
+    SURNAME, surname,
+    PHONE, phone,
+    QUANTITY, quant,
+    WINDOW,  booking_callback__handler
+    )
 
 def main() -> None:
     with open('TOKEN', 'r') as f:

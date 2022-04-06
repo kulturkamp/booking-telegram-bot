@@ -31,7 +31,7 @@ def registration1(update: Update, context: CallbackContext) -> int:
     if datetime.datetime.now().strftime('%H:%M:%S') >= '18:00:00':
         reply_keyboard = [['Зареєструватися на сьогодні'], ['Зареєструватися на завтра']]
         update.message.reply_text(
-            'Реєстрацію на сбогодні завершено. Ви можете зареєстуватися на завтра',
+            'Реєстрацію на сьогодні завершено. Ви можете зареєстуватися на завтра',
             reply_markup=ReplyKeyboardMarkup(
                 reply_keyboard, one_time_keyboard=True
             )
@@ -86,7 +86,6 @@ def phone(update: Update, context: CallbackContext) -> int:
     return QUANTITY
 
 def facts_to_str(user_data: Dict[str, str]) -> str:
-    """Helper function for formatting the gathered user info."""
     facts = [f'{value}' for _, value in user_data.items()]
     return "\n".join(facts).join(['\n', '\n'])
 
@@ -117,7 +116,6 @@ stamp_map = dict(zip(
 MAX_ENTRIES = 10
 
 def booking_callback__handler(update: Update, context: CallbackContext) -> None:
-    """Parses the CallbackQuery and updates the message text."""
     query = update.callback_query
     query.answer()
 
@@ -137,7 +135,7 @@ def booking_callback__handler(update: Update, context: CallbackContext) -> None:
                 keyboard = [[InlineKeyboardButton(stamp, callback_data=callback)] for callback, stamp in stamp_map.items()]
                 inline_markup = InlineKeyboardMarkup(keyboard)
                 query.edit_message_text(
-                    'Обраний час уже зайнято, оберітьінший.',
+                    'Обраний час уже зайнято, оберіть інший.',
                     reply_markup=inline_markup
                 )
                 return WINDOW
@@ -149,7 +147,7 @@ def booking_callback__handler(update: Update, context: CallbackContext) -> None:
                 keyboard = [[InlineKeyboardButton(stamp, callback_data=callback)] for callback, stamp in stamp_map.items()]
                 inline_markup = InlineKeyboardMarkup(keyboard)
                 query.edit_message_text(
-                    'Обраний час уже зайнято, оберітьінший.',
+                    'Обраний час уже зайнято, оберіть інший.',
                     reply_markup=inline_markup
                 )
                 return WINDOW
@@ -167,7 +165,7 @@ def booking_callback__handler(update: Update, context: CallbackContext) -> None:
                 keyboard = [[InlineKeyboardButton(stamp, callback_data=callback)] for callback, stamp in stamp_map.items()]
                 inline_markup = InlineKeyboardMarkup(keyboard)
                 query.edit_message_text(
-                    'Обраний час уже зайнято, оберітьінший.',
+                    'Обраний час уже зайнято, оберіть інший.',
                     reply_markup=inline_markup
                 )
                 return WINDOW
@@ -179,7 +177,7 @@ def booking_callback__handler(update: Update, context: CallbackContext) -> None:
                 keyboard = [[InlineKeyboardButton(stamp, callback_data=callback)] for callback, stamp in stamp_map.items()]
                 inline_markup = InlineKeyboardMarkup(keyboard)
                 query.edit_message_text(
-                    'Обраний час уже зайнято, оберітьінший.',
+                    'Обраний час уже зайнято, оберіть інший.',
                     reply_markup=inline_markup
                 )
                 return WINDOW
@@ -187,8 +185,6 @@ def booking_callback__handler(update: Update, context: CallbackContext) -> None:
                 write_booking_data(tomorrow, stamp, u_data['quantity'])
     return ConversationHandler.END
 
-def reply_handler(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text(f'echo: {update.message.text}')
 
 
 
