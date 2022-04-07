@@ -6,14 +6,14 @@ from telegram.ext import(
     CallbackQueryHandler, 
     ConversationHandler
     )
-from registration_handler import (
+from registration_handler import(
     start_command,
     INIT_CHOISE, registration1, registration2,
     NAME, name,
     SURNAME, surname,
     PHONE, phone,
     QUANTITY, quant,
-    WINDOW,  booking_callback__handler
+    WINDOW,  booking_callback_handler
     )
 
 def main() -> None:
@@ -35,29 +35,20 @@ def main() -> None:
                 ),
             ],
             NAME:[
-                MessageHandler(
-                    Filters.text, name
-                )
+                MessageHandler(Filters.text, name)
             ],
             SURNAME:[
-                MessageHandler(
-                    Filters.text, surname
-                )
+                MessageHandler(Filters.text, surname)
             ],
             PHONE:[
-                MessageHandler(
-                    Filters.text, phone
-                )
+                MessageHandler( Filters.text, phone)
             ],
             QUANTITY:[
-                MessageHandler(
-                    Filters.text, quant
-                )
+                MessageHandler(Filters.text, quant)
             ],
             WINDOW:[
-                CallbackQueryHandler(booking_callback__handler)
+                CallbackQueryHandler(booking_callback_handler)
             ]
-
         },
         fallbacks=[]
     )

@@ -1,5 +1,8 @@
+from lib2to3 import refactor
 import logging
 import datetime
+from sklearn import tree
+from sqlalchemy import false
 from telegram import ReplyKeyboardMarkup, Update,  InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import  CallbackContext, ConversationHandler
 from typing import Dict
@@ -15,7 +18,6 @@ INIT_CHOISE, NAME, SURNAME, PHONE, QUANTITY, WINDOW = range(6)
 
 
 def start_command(update: Update, context: CallbackContext) -> int:
-
     reply_keyboard = [['Зареєструватися на сьогодні'], ['Зареєструватися на завтра']]
     update.message.reply_text(
         'Оберіть опцію:',
@@ -27,7 +29,6 @@ def start_command(update: Update, context: CallbackContext) -> int:
 
 
 def registration1(update: Update, context: CallbackContext) -> int:
-
     if datetime.datetime.now().strftime('%H:%M:%S') >= '18:00:00':
         reply_keyboard = [['Зареєструватися на сьогодні'], ['Зареєструватися на завтра']]
         update.message.reply_text(
@@ -87,14 +88,23 @@ def phone(update: Update, context: CallbackContext) -> int:
 
 def facts_to_str(user_data: Dict[str, str]) -> str:
     facts = [f'{value}' for _, value in user_data.items()]
-    return "\n".join(facts).join(['\n', '\n'])
+    return "\n".join(facts[1:]).join(['\n', '\n'])
+
+from booking_handler import read_booking_data, timestamps, write_booking_data
+
+stamps_m = [timestamps[i:i+6] for i in range(0, len(timestamps), 6)]
+
+keyboard = [
+    [InlineKeyboardButton(stamp, callback_data=stamp) for stamp in stamps_m[0]],
+     [InlineKeyboardButton(stamp, callback_data=stamp) for stamp in stamps_m[1]],
+      [InlineKeyboardButton(stamp, callback_data=stamp) for stamp in stamps_m[2]]
+]
+
+inline_markup = InlineKeyboardMarkup(keyboard)
 
 def quant(update: Update, context: CallbackContext) -> int:
     text = update.message.text
     context.user_data['quantity'] = text
-
-    keyboard = [[InlineKeyboardButton(stamp, callback_data=callback)] for callback, stamp in stamp_map.items()]
-    inline_markup = InlineKeyboardMarkup(keyboard)
 
     update.message.reply_text(
         "Реєстрацію завершено." 
@@ -105,84 +115,45 @@ def quant(update: Update, context: CallbackContext) -> int:
 
     return WINDOW
 
-from booking_handler import read_booking_data, timestamps, write_booking_data
-
-stamp_map = dict(zip(
-        list(range(len(timestamps))), 
-        timestamps
-        )
-    )
 
 MAX_ENTRIES = 10
 
-def booking_callback__handler(update: Update, context: CallbackContext) -> None:
+def check_entries(data, date, stamp, max):
+    try:
+        curr = data[date][stamp]
+    except KeyError:
+        return True
+    
+    if curr >= max:
+        return False
+    
+    return True
+
+def booking_callback_handler(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
-
-    stamp_index = int(query.data)
-    stamp = stamp_map[stamp_index]
-
-    query.edit_message_text(text=f"{facts_to_str(context.user_data)}\n"
-                                 f'Обраний час: {stamp}')
+    stamp = query.data 
+    u_data = context.user_data    
     
-    u_data = context.user_data
+    current_data = read_booking_data()
 
-    if u_data['date'] == 'today':
-        today = datetime.date.today().strftime("%d/%m/%Y")
-        current_stamps = read_booking_data()
-        try:
-            if current_stamps[today][stamp] >= MAX_ENTRIES:
-                keyboard = [[InlineKeyboardButton(stamp, callback_data=callback)] for callback, stamp in stamp_map.items()]
-                inline_markup = InlineKeyboardMarkup(keyboard)
-                query.edit_message_text(
-                    'Обраний час уже зайнято, оберіть інший.',
-                    reply_markup=inline_markup
-                )
-                return WINDOW
-            else:
-                write_booking_data(today, stamp, u_data['quantity'])
-        except KeyError:
-            current_stamps[today] = dict.fromkeys(timestamps, 0)
-            if current_stamps[today][stamp] >= MAX_ENTRIES:
-                keyboard = [[InlineKeyboardButton(stamp, callback_data=callback)] for callback, stamp in stamp_map.items()]
-                inline_markup = InlineKeyboardMarkup(keyboard)
-                query.edit_message_text(
-                    'Обраний час уже зайнято, оберіть інший.',
-                    reply_markup=inline_markup
-                )
-                return WINDOW
-            else:
-                write_booking_data(today, stamp, u_data['quantity'])
+    today = datetime.date.today().strftime("%d/%m/%Y")
+    tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).strftime("%d/%m/%Y")
 
-    elif u_data['date'] == 'tomorrow':
-        print('ENTERED TOMMORROW REG')
-        tomorrow = (datetime.date.today() + datetime.timedelta(days=1)).strftime("%d/%m/%Y")
-        print(f'tommorow date: {tomorrow}')
-        current_stamps = read_booking_data()
+    date = today if u_data['date'] == 'today' else tomorrow
 
-        try:
-            if current_stamps[tomorrow][stamp] >= MAX_ENTRIES:
-                keyboard = [[InlineKeyboardButton(stamp, callback_data=callback)] for callback, stamp in stamp_map.items()]
-                inline_markup = InlineKeyboardMarkup(keyboard)
-                query.edit_message_text(
-                    'Обраний час уже зайнято, оберіть інший.',
-                    reply_markup=inline_markup
-                )
-                return WINDOW
-            else:
-                write_booking_data(tomorrow, stamp, u_data['quantity'])
-        except KeyError:
-             current_stamps[tomorrow] = dict.fromkeys(timestamps, 0)
-             if current_stamps[tomorrow][stamp] >= MAX_ENTRIES:
-                keyboard = [[InlineKeyboardButton(stamp, callback_data=callback)] for callback, stamp in stamp_map.items()]
-                inline_markup = InlineKeyboardMarkup(keyboard)
-                query.edit_message_text(
-                    'Обраний час уже зайнято, оберіть інший.',
-                    reply_markup=inline_markup
-                )
-                return WINDOW
-             else:
-                write_booking_data(tomorrow, stamp, u_data['quantity'])
+    query.edit_message_text(text=f'{facts_to_str(context.user_data)}\n'
+                                 f'Обраний час: {date} {stamp}')
+
+    if not check_entries(current_data, date, stamp, MAX_ENTRIES):
+        query.edit_message_text(
+                'Обраний час уже зайнято, оберіть інший.',
+                reply_markup=inline_markup
+            )
+        return WINDOW
+    else:
+        write_booking_data(date, stamp, u_data['quantity'])
+
     return ConversationHandler.END
 
 
