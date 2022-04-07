@@ -14,8 +14,7 @@ def write_booking_data(date, stamp, quant):
     data = read_booking_data() 
 
     if date not in data:
-        timestamps_dict = dict.fromkeys(timestamps, 0)
-        data[date] = timestamps_dict
+        data[date] = dict.fromkeys(timestamps, 0)
 
     data[date][stamp] += 1
 
