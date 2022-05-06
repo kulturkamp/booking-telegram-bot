@@ -1,8 +1,5 @@
-from lib2to3 import refactor
 import logging
 import datetime
-from sklearn import tree
-from sqlalchemy import false
 from telegram import ReplyKeyboardMarkup, Update,  InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import  CallbackContext, ConversationHandler
 from typing import Dict
@@ -88,7 +85,7 @@ def phone(update: Update, context: CallbackContext) -> int:
 
 def facts_to_str(user_data: Dict[str, str]) -> str:
     facts = [f'{value}' for _, value in user_data.items()]
-    return "\n".join(facts[1:]).join(['\n', '\n'])
+    return "\n".join(facts[1:])
 
 from booking_handler import read_booking_data, timestamps, write_booking_data
 
@@ -107,9 +104,9 @@ def quant(update: Update, context: CallbackContext) -> int:
     context.user_data['quantity'] = text
 
     update.message.reply_text(
-        "Реєстрацію завершено." 
-        f"{facts_to_str(context.user_data)}"       
-        "Оберіть бажаний час:\n",
+        'Реєстрацію завершено.\n' 
+        f'{facts_to_str(context.user_data)}\n'       
+        'Оберіть бажаний час:\n',
         reply_markup=inline_markup
     )
 
